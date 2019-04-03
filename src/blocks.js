@@ -12,3 +12,4 @@
 import './block/block.js';
 import './alert/index.js';
 import './alert-rt/index.js';
+import './button/button.js';
