@@ -9,14 +9,13 @@
 import './style.scss';
 import './editor.scss';
 
-import { STYLES, getStyleNameFromClasses } from './helper.js';
-
 const { __ } = wp.i18n; // Import __() from wp.i18n
 const { registerBlockType } = wp.blocks; // Import registerBlockType() from wp.blocks
 
-const { PlainText }	= wp.editor;
+const { MediaUpload, MediaUploadCheck } = wp.editor;
+const { IconButton } = wp.components;
+const ALLOWED_MEDIA_TYPES = ['image'];
 
-const { RichText }	= wp.editor;
 
 /**
  * Register: aa Gutenberg Block.
@@ -31,26 +30,38 @@ const { RichText }	= wp.editor;
  * @return {?WPBlock}          The block, if it has been successfully
  *                             registered; otherwise `undefined`.
  */
-registerBlockType( 'cgb/button', {
+registerBlockType( 'cgb/image-lwhhdbd', {
 	// Block name. Block names must be string that contains a namespace prefix. Example: my-plugin/my-custom-block.
-	title: __( 'KM Button' ), // Block title.
+	title: __( 'Image Uploader' ), // Block title.
 	icon: 'shield', // Block icon from Dashicons → https://developer.wordpress.org/resource/dashicons/.
 	category: 'common', // Block category — Group blocks together based on common traits E.g. common, formatting, layout widgets, embed.
 	keywords: [
-		__( 'Button' ),
-		__( 'Btn' ),
-		__( 'BS Button' ),
+		__( 'Image' ),
+		__( 'Picture' ),
+		__( 'Chobi' ),
 	],
-	styles : STYLES,
-	attributes : {
-		style : {
-			type : 'string'
+	attributes: {
+		id: {
+			type: 'integer',
+			default: 0
 		},
-		content : {
-			type : 'html',
-			selector : 'div'
+		src: {
+			type: 'string',
+			source: 'attribute', //source type
+			selector: '.lwhh-figure__image', //dom selector
+			attribute: 'src', //html attribute name
+		},
+		alt: {
+			type: 'string',
+			source: 'attribute', //source type
+			selector: '.lwhh-figure__image', //dom selector
+			attribute: 'alt', //html attribute name
 		}
 	},
+	supports :{
+		align: true
+	},
+
 	/**
 	 * The edit function describes the structure of your block in the context of the editor.
 	 * This represents what the editor will render when the block is used.
@@ -59,21 +70,35 @@ registerBlockType( 'cgb/button', {
 	 *
 	 * @link https://wordpress.org/gutenberg/handbook/block-api/block-edit-save/
 	 */
-	edit( { className, setAttributes, attributes, isSelected } ) {
-		// Creates a <p class='wp-block-cgb-block-lwhhdbd'></p>.
-		let style = getStyleNameFromClasses(STYLES, className);
-		setAttributes({style});
+	edit( { className, attributes, setAttributes } ) {
+		const { id, src, alt } = attributes;
 		return (
-
-			<RichText
-				multiline = {true}
-				placeholder= {__('Please add alert message...')}
-				tagName="button"
-				className={`${className} btn btn-${style}`}
-				value={ attributes.content }
-				onChange={ ( content ) => setAttributes( { content } ) }
-			/>
-		);
+			<figure className={`lwhh-figure ${className}`} >
+				{src && <img className='lwhh-card-figure' src={src} alt={alt} />}
+				<MediaUploadCheck>
+					<MediaUpload
+						onSelect={(image) => {
+							setAttributes({
+								id: image.id,
+								alt: image.title,
+								src: (image.sizes.medium && image.sizes.medium.url) || image.url
+							})
+						}}
+						multiple={false}
+						allowedTypes={ALLOWED_MEDIA_TYPES}
+						value={id}
+						render={({ open }) => (
+							<IconButton
+								className='lwhh-figure__controller'
+								onClick={open}
+								icon={(id || src) ? 'update' : 'format-image'}
+								label={(id || src) ? __('Update image') : __('Add image')}
+							/>
+						)}
+					/>
+				</MediaUploadCheck>
+			</figure >
+		)
 	},
 
 	/**
@@ -84,10 +109,12 @@ registerBlockType( 'cgb/button', {
 	 *
 	 * @link https://wordpress.org/gutenberg/handbook/block-api/block-edit-save/
 	 */
-	save({ attributes } ) {
+	save({ attributes }) {
+		const { src, alt } = attributes;
 		return (
-
-			<RichText.Content className={`btn btn-${attributes.style}`} tagName="button" value={ attributes.content } />
-		);
+			<figure className='lwhh-figure'>
+				<img className='lwhh-figure__image' src={src} alt={alt} />
+			</figure>
+		)
 	},
 } );
