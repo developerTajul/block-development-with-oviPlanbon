@@ -151,6 +151,13 @@ registerBlockType( 'cgb/card', {
 				<div className="lwhh-card-body">
 					<InnerBlocks 
 						allowedBlocks={ ALLOWED_BLOCKS }
+						template = {
+							[
+								['core/paragraph',  { placeholder: 'Write the description' }],
+								['lwhhdbd/alert',  { placeholder: 'Add Box for Alert' }],
+							]
+						}
+						templateLock = 'all'
 					/>
 				</div>
 			</div>
