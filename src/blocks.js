@@ -13,4 +13,4 @@ import './block/block.js';
 import './alert/index.js';
 import './alert-rt/index.js';
 import './button/button.js';
-import './image/image.js';
+import './card/card.js';
