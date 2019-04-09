@@ -12,8 +12,19 @@ import './editor.scss';
 const { __ } = wp.i18n; // Import __() from wp.i18n
 const { registerBlockType } = wp.blocks; // Import registerBlockType() from wp.blocks
 
-const { RichText, InspectorControls } = wp.editor;
-const { PanelBody, SelectControl }	= wp.components;
+const { 
+	RichText, 
+	InspectorControls, 
+	InnerBlocks  
+} = wp.editor;
+
+const { 
+	PanelBody, 
+	SelectControl 
+}	= wp.components;
+
+
+const ALLOWED_BLOCKS = [ 'core/image', 'core/paragraph', 'lwhhdbd/alert' ];
 
 /**
  * Register: aa Gutenberg Block.
@@ -55,6 +66,10 @@ registerBlockType( 'cgb/card', {
 			type : 'string',
 			default: 'top-right'
 		},
+		image_position : {
+			type : 'string',
+			default: 'top'
+		},
 
 	},
 
@@ -67,10 +82,35 @@ registerBlockType( 'cgb/card', {
 	 * @link https://wordpress.org/gutenberg/handbook/block-api/block-edit-save/
 	 */
 	edit( { attributes, setAttributes } ) {
-		const { title, content, label, btn_text, label_position } = attributes;
+		const { 
+			title, 
+			content, 
+			label, 
+			btn_text, 
+			label_position, 
+			image_position 
+		} = attributes;
 		return (
-			<div className="lwhh-card">
+			<div className={`lwhh-card lwhh-card-figure-${image_position}`}>
 				<InspectorControls>
+					<PanelBody
+			            title= { __('Image')}
+			            initialOpen={ true }
+				    >
+
+					    <SelectControl
+					        label={ __( 'Image Position' ) }
+					        value={ image_position } 
+					        onChange={ ( position ) => setAttributes({ image_position: position}) }
+					        options={ [
+					           	{ value: 'top', label: __('Image On Top') },
+								{ value: 'left', label: __('Image On Left') },
+								{ value: 'right', label: __('Image On Right') },
+					        ] }
+					    />
+
+					</PanelBody>
+
 					<PanelBody
 			            title= { __('Label')}
 			            initialOpen={ true }
@@ -109,36 +149,9 @@ registerBlockType( 'cgb/card', {
 					</div>
 				</div>
 				<div className="lwhh-card-body">
-					<h2 className="lwhh-card-title">
-						<RichText
-							multiline= { false }
-							value={ attributes.title }
-							placeholder= { __("Add Title")}
-							onChange={ ( title ) => setAttributes( { title } ) }
-							keepPlaceholderOnFocus={ true}
-						/>
-					</h2>
-
-					<div className="lwhh-card-text">
-						<p>
-							<RichText
-								multiline= { false }
-								value={ attributes.content }
-								placeholder= { __("Add Content")}
-								onChange={ ( content ) => setAttributes( { content } ) }
-								keepPlaceholderOnFocus={ true}
-							/>
-						</p>
-					</div>
-					<a href="#" className="lwhh-card-btn">
-						<RichText
-							multiline= { false }
-							value={ attributes.btn_text }
-							placeholder= { __("Add Button")}
-							onChange={ ( btn_text ) => setAttributes( { btn_text } ) }
-							keepPlaceholderOnFocus={ true}
-						/>
-					</a>
+					<InnerBlocks 
+						allowedBlocks={ ALLOWED_BLOCKS }
+					/>
 				</div>
 			</div>
 		);
