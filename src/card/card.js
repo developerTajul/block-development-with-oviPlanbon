@@ -15,14 +15,18 @@ const { registerBlockType } = wp.blocks; // Import registerBlockType() from wp.b
 const { 
 	RichText, 
 	InspectorControls, 
-	InnerBlocks  
+	InnerBlocks,
+	MediaUpload,
+	MediaUploadCheck  
 } = wp.editor;
 
 const { 
 	PanelBody, 
-	SelectControl 
+	SelectControl,
+	IconButton 
 }	= wp.components;
 
+const ALLOWED_MEDIA_TYPES = ['image'];
 
 const ALLOWED_BLOCKS = [ 'core/image', 'core/paragraph', 'lwhhdbd/alert' ];
 
@@ -70,6 +74,22 @@ registerBlockType( 'cgb/card', {
 			type : 'string',
 			default: 'top'
 		},
+		img_id: {
+			type: 'integer',
+			default: 0
+		},
+		img_src: {
+			type: 'string',
+			source: 'attribute', //source type
+			selector: '.lwhh-figure__image', //dom selector
+			attribute: 'src', //html attribute name
+		},
+		img_alt: {
+			type: 'string',
+			source: 'attribute', //source type
+			selector: '.lwhh-figure__image', //dom selector
+			attribute: 'alt', //html attribute name
+		}
 
 	},
 
@@ -81,14 +101,17 @@ registerBlockType( 'cgb/card', {
 	 *
 	 * @link https://wordpress.org/gutenberg/handbook/block-api/block-edit-save/
 	 */
-	edit( { attributes, setAttributes } ) {
+	edit( { attributes, setAttributes, className } ) {
 		const { 
 			title, 
 			content, 
 			label, 
 			btn_text, 
 			label_position, 
-			image_position 
+			image_position, 
+			img_id,
+			img_src,
+			img_alt 
 		} = attributes;
 		return (
 			<div className={`lwhh-card lwhh-card-figure-${image_position}`}>
@@ -137,7 +160,33 @@ registerBlockType( 'cgb/card', {
 				</InspectorControls>
 
 				<div className="lwhh-card-figure">
-					<img src="https://via.placeholder.com/400x200?text=LWHH Gutenberg Course" alt="..." />
+					<figure className={`lwhh-figure ${className}`} >
+						{img_src && <img className='lwhh-card-figure' src={img_src} alt={img_alt} />}
+						<MediaUploadCheck>
+							<MediaUpload
+								onSelect={(image) => {
+									setAttributes({
+										img_id: image.id,
+										img_alt: image.title,
+										img_src: (image.sizes.medium && image.sizes.medium.url) || image.url
+									})
+								}}
+								multiple={false}
+								allowedTypes={ALLOWED_MEDIA_TYPES}
+								value={img_id}
+								render={({ open }) => (
+									<IconButton
+										className='lwhh-figure__controller'
+										onClick={open}
+										icon={(img_id || img_src) ? 'update' : 'format-image'}
+										label={(img_id || img_src) ? __('Update image') : __('Add image')}
+									/>
+								)}
+							/>
+						</MediaUploadCheck>
+					</figure >
+
+
 					<div className={`lwhh-label lwhh-label--${label_position}`}>
 						<RichText
 							multiline= { false }
@@ -172,21 +221,26 @@ registerBlockType( 'cgb/card', {
 	 *
 	 * @link https://wordpress.org/gutenberg/handbook/block-api/block-edit-save/
 	 */
-	save( props ) {
+	save( { attributes } ) {
+		const { 
+			title, 
+			content, 
+			label, 
+			btn_text, 
+			label_position, 
+			image_position, 
+			img_src,
+			img_alt 
+		} = attributes;
 		return (
-			<div>
-				<p>— Hello from the frontend.</p>
-				<p>
-					CGB BLOCK: <code>lwhhdbd</code> is a new Gutenberg block.
-				</p>
-				<p>
-					It was created via{ ' ' }
-					<code>
-						<a href="https://github.com/ahmadawais/create-guten-block">
-							create-guten-block
-						</a>
-					</code>.
-				</p>
+			<div className={`lwhh-card lwhh-card-figure-${image_position}`}>
+				<div className="lwhh-card-figure">
+					<img src={img_src} alt={img_alt} />
+					<div className={`lwhh-label lwhh-label--${label_position}`}>{ label }</div>
+				</div>
+				<div className="lwhh-card-body">
+					<InnerBlocks.Content />
+				</div>
 			</div>
 		);
 	},
